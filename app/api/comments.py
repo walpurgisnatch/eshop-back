@@ -3,15 +3,30 @@ from app import db
 from app.models import Comment
 from app.api import bp
 
-@bp.route('/comments', methods=['GET'])
-def get_comments():
-    """Get Comments.
+# @bp.route('/comments', methods=['GET'])
+# def get_comments():
+#     """Get Comments.
+#     ---
+#     responses:
+#         '200':
+#           description: return all comments
+#         """
+#     return jsonify(Comment.get_all_comments())
+
+@bp.route('/comments/<int:id>', methods=['GET'])
+def get_comments(id):
+    """Download a file.
     ---
+    parameters:
+         - in: path
+           name: id
+           type: int
+           required: true
     responses:
         '200':
-          description: return all comments
+          description: return comment
         """
-    return jsonify(Comment.get_all_comments())
+    return jsonify(Comment.get_by_id(id))
 
 @bp.route('/setComments', methods=['POST'])
 def set_comments():

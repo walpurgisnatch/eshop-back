@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate, current_app
+from flask_cors import CORS, cross_origin
 from .config import Config
 import os
 
@@ -10,9 +11,10 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-
 from app.api import bp as api_bp
 app.register_blueprint(api_bp, url_prefix='/api')
+
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 @app.route('/', methods=['GET'])
 def main():

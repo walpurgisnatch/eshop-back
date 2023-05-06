@@ -1,48 +1,16 @@
 import json
 import enum
+import math
 
 from flask import Flask, jsonify
 from dataclasses import dataclass
 from app import db
 
-# class ItemPhoto(db.Model):
-#     __tablename__ = 'item_photo'
-#     id = db.Column(db.Integer, primary_key=True)
-#     link_to_photo = db.Column(db.String(80), nullable=False)
-
-#     def get_photo(_id):
-#         return ItemPhoto.query.filter_by(id=_id).first()
-
-#     def add_photo(_link):
-#         new_photo = ItemPhoto(link_to_photo=_link)
-#         db.session.add(new_photo)
-#         try:
-#             db.session.commit()
-#         except DatabaseError:
-#             db.session.rollback()
-
-#     def delete_photo(_id):
-#         result = ItemPhoto.query.filter_by(id=_id).delete()
-#         try:
-#             db.session.commit()
-#         except:
-#             db.session.rollback()
-#         return bool(result)
-
-#     def update_photo(_id, _link):
-#         ItemPhoto.query.filter_by(id=_id).first().link_to_photo = _link
-#         try:
-#             db.session.commit()
-#         except:
-#             db.session.rollback()
-
-#     def __repr__(self):
-#         return "item with id{0} ".format(self.id)
-
 @dataclass
 class Comment(db.Model):
     id: int
     item: int
+    article: int
     username: str
     body: str
     response: id
@@ -50,15 +18,16 @@ class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
     item = db.Column(db.Integer, index=True)
+    article = db.Column(db.Integer, index=True)
     username = db.Column(db.String(127), index=True)
-    body = db.Column(db.String(1023), index=True)
+    body = db.Column(db.String(1023), index=True, nullable=False)
     response = db.Column(db.Integer, index=True)
 
     def get_all_comments():
         return Comment.query.all()
 
     def get_by_id(_id):
-        return Comment.query.filter_by(id=_id).first()
+        return Comment.query.filter_by(item=_id).first()
 
     def add_comment(_item, _username, _body, _response):
         new_comment = Comment(item=_item, username=_username, body=_body, response=_response)
@@ -68,6 +37,9 @@ class Comment(db.Model):
         except Exception as e:
             print(e)
             db.session.rollback()
+
+    def add_json(comment):
+        add_comment(comment['item'], comment['username'], comment['body'], comment['response'])
 
     def delete_comment(_id):
         result = Comment.query.filter_by(id=_id).delete()
@@ -96,14 +68,9 @@ class Item(db.Model):
 
     def filter(limit, offset, filters = {}):
         query = db.session.query(Item)
-        for attr, value in filters.items():
-            try:
-                query = query.filter(getattr(Item, attr) == value)
-            except:
-                pass
-        count = len(query.all())
+        count = math.ceil(len(query.all()) / limit)
         query = query.limit(limit)
-        query = query.offset(offset)
+        query = query.offset(offset*limit)
         return query.all(), count
 
     def get_by_id(_id):
@@ -117,6 +84,9 @@ class Item(db.Model):
         except Exception as e:
             print(e)
             db.session.rollback()
+
+    def add_json(item):
+        add_item(item['name'], item['description'], item['cost'])
 
     def delete(_id):
         result = Item.query.filter_by(id=_id).delete()
@@ -137,3 +107,70 @@ class Item(db.Model):
         except Exception as e:
             print(e)
             db.session.rollback()
+
+    def update_json(item):
+        update(item['id'], item['name'], item['description'], item['cost'])
+
+@dataclass
+class Article(db.Model):
+    id: int
+    title: str
+    body: str
+    attachments: int
+    rating: int
+    
+    __tabletitle__ = 'article'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(63), index=True, nullable=False)
+    body = db.Column(db.String(2047), index=True, nullable=False)
+    attachments = db.Column(db.String(10000), index=True)
+    rating = db.Column(db.Integer, index=True, nullable=False)
+
+    def get_all():
+        return Article.query.all()
+
+    def filter(limit, offset, filters = {}):
+        query = db.session.query(Article)
+        count = math.ceil(len(query.all()) / limit)
+        query = query.limit(limit)
+        query = query.offset(offset*limit)
+        return query.all(), count
+
+    def get_by_id(_id):
+        return Article.query.filter_by(id=_id).first()
+
+    def add_article(_title, _body, _attachments, _rating):
+        new_article = Article(title=_title, body=_body, attachments=_attachments, rating=_rating)
+        db.session.add(new_article)
+        try:
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+
+    def add_json(article):
+        add_article(article['title'], article['body'], article['attachments'], article['rating'])
+
+    def delete(_id):
+        result = Article.query.filter_by(id=_id).delete()
+        try:
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+        return bool(result)
+
+    def update(_id, _title, _body, _attachments, _rating):
+        new_article = Article.query.filter_by(id=_id).first()
+        new_article.title=_title
+        new_article.body=_body
+        new_article.attachments=_attachments,
+        new_article.rating=_rating
+        try:
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+
+    def update_json(article):
+        update(article['id'], article['title'], article['body'], article['attachments'], article['rating'])
