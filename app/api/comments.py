@@ -1,41 +1,18 @@
-from flask import jsonify, request
+from flask import jsonify, request, Response
 from app import db
 from app.models import Comment
 from app.api import bp
 
-# @bp.route('/comments', methods=['GET'])
-# def get_comments():
-#     """Get Comments.
-#     ---
-#     responses:
-#         '200':
-#           description: return all comments
-#         """
-#     return jsonify(Comment.get_all_comments())
+@bp.route('item/<int:id>/comments', methods=['GET'])
+def item_comments(id):
+    return jsonify(Comment.get_by_id_item(id))
 
-@bp.route('/comments/<int:id>', methods=['GET'])
-def get_comments(id):
-    """Download a file.
-    ---
-    parameters:
-         - in: path
-           name: id
-           type: int
-           required: true
-    responses:
-        '200':
-          description: return comment
-        """
-    return jsonify(Comment.get_by_id(id))
+@bp.route('article/<int:id>/comments', methods=['GET'])
+def article_comments(id):
+    return jsonify(Comment.get_by_id_article(id))
 
-@bp.route('/setComments', methods=['POST'])
-def set_comments():
-    """Set comments to db.
-    ---
-    responses:
-        '200':
-          description: comments added
-        """
+@bp.route('/comments', methods=['POST'])
+def add_comment():
     data = request.get_json()
-    Comment.set_comments(data)
+    Comment.add_json(data)
     return Response("", 201, mimetype='application/json')

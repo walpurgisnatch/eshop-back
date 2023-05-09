@@ -26,11 +26,14 @@ class Comment(db.Model):
     def get_all_comments():
         return Comment.query.all()
 
-    def get_by_id(_id):
-        return Comment.query.filter_by(item=_id).first()
+    def get_by_id_item(_id):
+        return Comment.query.filter_by(item=_id).all()
 
-    def add_comment(_item, _username, _body, _response):
-        new_comment = Comment(item=_item, username=_username, body=_body, response=_response)
+    def get_by_id_article(_id):
+        return Comment.query.filter_by(article=_id).all()
+
+    def add_comment(_item, _article, _username, _body, _response):
+        new_comment = Comment(item=_item, article=_article, username=_username, body=_body, response=_response)
         db.session.add(new_comment)
         try:
             db.session.commit()
@@ -39,7 +42,7 @@ class Comment(db.Model):
             db.session.rollback()
 
     def add_json(comment):
-        add_comment(comment['item'], comment['username'], comment['body'], comment['response'])
+        Comment.add_comment(comment['item'], comment['article'], comment['username'], comment['body'], comment['response'])
 
     def delete_comment(_id):
         result = Comment.query.filter_by(id=_id).delete()
@@ -81,12 +84,13 @@ class Item(db.Model):
         db.session.add(new_item)
         try:
             db.session.commit()
+            return new_item.id
         except Exception as e:
             print(e)
             db.session.rollback()
 
     def add_json(item):
-        add_item(item['name'], item['description'], item['cost'])
+        return Item.add_item(item['name'], item['description'], item['cost'])
 
     def delete(_id):
         result = Item.query.filter_by(id=_id).delete()
@@ -139,17 +143,18 @@ class Article(db.Model):
     def get_by_id(_id):
         return Article.query.filter_by(id=_id).first()
 
-    def add_article(_title, _body, _attachments, _rating):
-        new_article = Article(title=_title, body=_body, attachments=_attachments, rating=_rating)
+    def add_article(_title, _body, _attachments):
+        new_article = Article(title=_title, body=_body, attachments=_attachments, rating=0)
         db.session.add(new_article)
         try:
             db.session.commit()
+            return new_article.id
         except Exception as e:
             print(e)
             db.session.rollback()
 
     def add_json(article):
-        add_article(article['title'], article['body'], article['attachments'], article['rating'])
+        return Article.add_article(article['title'], article['body'], article['attachments'])
 
     def delete(_id):
         result = Article.query.filter_by(id=_id).delete()

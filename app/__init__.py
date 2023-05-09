@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_from_directory, jsonify
+from flask import *
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate, current_app
 from flask_cors import CORS, cross_origin
@@ -15,6 +15,15 @@ from app.api import bp as api_bp
 app.register_blueprint(api_bp, url_prefix='/api')
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+@app.before_request
+def basic_authentication():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "*")
+        response.headers.add("Access-Control-Allow-Methods", "*")
+        return response
 
 @app.route('/', methods=['GET'])
 def main():

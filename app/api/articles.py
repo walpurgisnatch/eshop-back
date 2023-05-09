@@ -6,12 +6,6 @@ from app.api import bp
 
 @bp.route('/articles', methods=['GET'])
 def get_articles():
-    """Get all articles
-     ---
-    responses:
-         200:
-           description: return all article
-        """
     try:
         if request.args and request.args['limit']:
            limit = int(request.args['limit'])
@@ -23,40 +17,17 @@ def get_articles():
 
 @bp.route('/article/<int:id>', methods=['GET'])
 def get_article(id):
-    """Download a file.
-    ---
-    parameters:
-         - in: path
-           name: id
-           type: int
-           required: true
-    responses:
-        '200':
-          description: return article
-        """
     return jsonify(Article.get_by_id(id))
 
 @bp.route('/articles', methods=['POST'])
 def add_article():
-    """Add article.
-    ---
-    responses:
-        '200':
-          description: article added
-        """
     data = request.get_json()
-    Article.add_json(data)
-    return Response("", 201, mimetype='application/json')
-
+    id = Article.add_json(data)
+    print(id)
+    return Response(f'{id}', 201, mimetype='application/json')
 
 @bp.route('/articles', methods=['PUT'])
 def update_article():
-    """Update article.
-    ---
-    responses:
-        '200':
-          description: article updated
-        """
     data = request.get_json()
     Article.update_json(data)
     return Response("", 201, mimetype='application/json')
