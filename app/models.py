@@ -4,7 +4,10 @@ import math
 
 from flask import Flask, jsonify
 from dataclasses import dataclass
+from app import app
 from app import db
+from app import server_path
+
 
 @dataclass
 class Comment(db.Model):
@@ -20,7 +23,7 @@ class Comment(db.Model):
     item = db.Column(db.Integer, index=True)
     article = db.Column(db.Integer, index=True)
     username = db.Column(db.String(127), index=True)
-    body = db.Column(db.String(1023), index=True, nullable=False)
+    body = db.Column(db.String(2047), index=True, nullable=False)
     response = db.Column(db.Integer, index=True)
 
     def get_all_comments():
@@ -59,12 +62,16 @@ class Item(db.Model):
     name: str
     description: str
     cost: int
+    pictures: str
+    thumbnail: str
     
     __tablename__ = 'item'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(63), index=True, nullable=False)
-    description = db.Column(db.String(127), index=True, nullable=False)
+    description = db.Column(db.Text, index=True, nullable=False)
     cost = db.Column(db.Integer, index=True, nullable=False)
+    pictures = db.Column(db.Text)
+    thumbnail = db.Column(db.String(127))
 
     def get_all():
         return Item.query.all()
@@ -76,11 +83,20 @@ class Item(db.Model):
         query = query.offset(offset*limit)
         return query.all(), count
 
-    def get_by_id(_id):
-        return Item.query.filter_by(id=_id).first()
+    def prepare_picture_paths(item):
+        if not item.pictures: return item
+        pictures = item.pictures.split('; ')
+        item.pictures = []
+        for picture in pictures:
+            item.pictures.append(f'{server_path}/api/photos/{picture}')
+        return item
 
-    def add_item(_name, _description, _cost):
-        new_item = Item(name=_name, description=_description, cost=_cost)
+    def get_by_id(_id):
+        return Item.prepare_picture_paths(Item.query.filter_by(id=_id).first())
+
+    def add_item(_name, _description, _cost, _pictures):
+        _thumbnail = f"{server_path}/api/photos/{_pictures.split('; ')[0]}"
+        new_item = Item(name=_name, description=_description, cost=_cost, pictures=_pictures, thumbnail=_thumbnail)
         db.session.add(new_item)
         try:
             db.session.commit()
@@ -90,7 +106,7 @@ class Item(db.Model):
             db.session.rollback()
 
     def add_json(item):
-        return Item.add_item(item['name'], item['description'], item['cost'])
+        return Item.add_item(item['name'], item['description'], item['cost'], item['pictures'])
 
     def delete(_id):
         result = Item.query.filter_by(id=_id).delete()
@@ -126,7 +142,7 @@ class Article(db.Model):
     __tabletitle__ = 'article'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(63), index=True, nullable=False)
-    body = db.Column(db.String(2047), index=True, nullable=False)
+    body = db.Column(db.Text, index=True, nullable=False)
     attachments = db.Column(db.String(10000), index=True)
     rating = db.Column(db.Integer, index=True, nullable=False)
 

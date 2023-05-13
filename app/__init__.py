@@ -1,12 +1,15 @@
+import os
+
 from flask import *
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate, current_app
 from flask_cors import CORS, cross_origin
 from .config import Config
-import os
+
+server_path = 'http://localhost:5000'
+allowed_extensions = {'png', 'jpg', 'jpeg'}
 
 app = Flask(__name__, static_url_path='/static')
-
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)

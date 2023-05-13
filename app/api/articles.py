@@ -23,7 +23,6 @@ def get_article(id):
 def add_article():
     data = request.get_json()
     id = Article.add_json(data)
-    print(id)
     return Response(f'{id}', 201, mimetype='application/json')
 
 @bp.route('/articles', methods=['PUT'])
