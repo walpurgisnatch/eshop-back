@@ -6,7 +6,7 @@ from app.models import Item
 from app.api import bp
 from werkzeug.utils import secure_filename
 import os
-
+import json
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -17,8 +17,10 @@ def get_items():
     try:
         if request.args and request.args['limit']:
            limit = int(request.args['limit'])
-           offset = int(request.args['offset'])        
-           return jsonify(Item.filter(limit, offset))
+           offset = int(request.args['offset'])
+           filters = json.loads(request.args['filters'])
+           print(filters)
+           return jsonify(Item.filter(limit, offset, filters))
         return jsonify(Item.get_all())
     except Exception as e:
         return Response(e, 400, mimetype='application/json')

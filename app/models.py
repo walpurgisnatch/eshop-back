@@ -78,7 +78,12 @@ class Item(db.Model):
 
     def filter(limit, offset, filters = {}):
         query = db.session.query(Item)
-        count = math.ceil(len(query.all()) / limit)
+        for attr, value in filters.items():
+            try:
+                query = query.filter(getattr(Item, attr).like(f'%{value}%'))
+            except:
+                pass
+        count = math.ceil(query.count() / limit)
         query = query.limit(limit)
         query = query.offset(offset*limit)
         return query.all(), count
@@ -117,11 +122,14 @@ class Item(db.Model):
             db.session.rollback()
         return bool(result)
 
-    def update(_id, _name, _description, _cost):
+    def update(_id, _name, _description, _cost, _pictures):
+        _thumbnail = f"{server_path}/api/photos/{_pictures.split('; ')[0]}"
         new_item = Item.query.filter_by(id=_id).first()
         new_item.name=_name
         new_item.description=_description
         new_item.cost=_cost
+        new_item.pictures=_pictures
+        new_item.thumbnail=_thumbnail
         try:
             db.session.commit()
         except Exception as e:
@@ -129,7 +137,7 @@ class Item(db.Model):
             db.session.rollback()
 
     def update_json(item):
-        update(item['id'], item['name'], item['description'], item['cost'])
+        Item.update(item['id'], item['name'], item['description'], item['cost'], item['pictures'])
 
 @dataclass
 class Article(db.Model):
@@ -194,4 +202,4 @@ class Article(db.Model):
             db.session.rollback()
 
     def update_json(article):
-        update(article['id'], article['title'], article['body'], article['attachments'], article['rating'])
+        Article.update(article['id'], article['title'], article['body'], article['attachments'], article['rating'])
